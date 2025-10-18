@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Математика Группа Middle</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* 🎧 Мини-плеер */
+    .music-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 15px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 230px;
+      margin: 15px auto;
+    }
+
+    /* ▶️ Круглая кнопка */
+    #toggleBtn {
+      width: 35px;
+      height: 55px;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: white;
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+      box-shadow: 0 0 10px rgba(99,102,241,0.4);
+    }
+
+    #toggleBtn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(99,102,241,0.6);
+    }
+
+    #toggleBtn.playing {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(99,102,241,0.4); }
+      50% { box-shadow: 0 0 18px rgba(99,102,241,0.8); }
+    }
+
+    /* 🎚️ Ползунок громкости */
+    #volume {
+      -webkit-appearance: none;
+      width: 110px;
+      height: 6px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #volume::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 5px rgba(99,102,241,0.6);
+      transition: 0.2s;
+    }
+
+    #volume::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🎵 Мини-плеер -->
+  <section class="music-controls">
+    <button id="toggleBtn">🎵</button>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.3">
+    <audio id="bg-music" loop>
+      <source src="music2.mp3" type="audio/mpeg">
+    </audio>
+  </section>
+
+  <!-- 🧮 Основной контент -->
+  <div id="score" class="score-display">✅ 0 / 0</div>
+
+  <div id="topic-selection-screen" class="screen active">
+    <h1>Математика Группа Middle</h1>
+    <h2>Выберите тему</h2>
+    <button class="topic-btn" data-topic-id="1">Тема 4: КНД и СНД</button>
+    <button class="topic-btn" data-topic-id="2">Квадратные уравнения</button>
+    <button class="topic-btn" data-topic-id="3">Теорема Пифагора</button>
+    <button class="topic-btn" data-topic-id="4">Проценты и задачи</button>
+    <button class="topic-btn" data-topic-id="5">Степени и корни</button>
+    <button class="topic-btn" data-topic-id="6">Системы уравнений</button>
+  </div>
+
+  <div id="level-selection-screen" class="screen">
+    <button class="close-btn" title="Главное меню"></button>
+    <h1 id="selected-topic-name"></h1>
+    <h2>Выберите уровень сложности</h2>
+    <button class="level-btn" data-level="1">Уровень 1</button>
+    <button class="level-btn" data-level="2">Уровень 2</button>
+    <button class="level-btn" data-level="3">Уровень 3</button>
+    <button class="level-btn" data-level="4">Уровень 4</button>
+    <button class="level-btn" data-level="5">Уровень 5</button>
+  </div>
+
+  <div id="question-screen" class="screen">
+    <button class="close-btn" title="Главное меню"></button>
+    <h1 id="current-topic-name"></h1>
+    <p>Уровень сложности: <span id="current-level"></span></p>
+    <div id="question-container">
+      <p id="question-text"></p>
+      <input type="text" id="answer-input" placeholder="Введите ваш ответ">
+      <button id="submit-answer-btn">Проверить ответ</button>
+    </div>
+  </div>
+
+  <div id="result-screen" class="screen">
+    <button class="close-btn" title="Главное меню"></button>
+    <h2>Результат</h2>
+    <p id="result-message"></p>
+    <p>Правильный ответ: <span id="correct-answer"></span></p>
+    <button id="next-question-btn">Следующий пример</button>
+  </div>
+
+  <!-- 🎧 Скрипт управления музыкой -->
+  <script>
+    const music = document.getElementById("bg-music");
+    const volumeControl = document.getElementById("volume");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    document.addEventListener("click", () => {
+      if (music.paused) music.play();
+    }, { once: true });
+
+    toggleBtn.addEventListener("click", () => {
+      if (music.paused) {
+        music.play();
+        toggleBtn.textContent = "⏸️";
+      } else {
+        music.pause();
+        toggleBtn.textContent = "🎵";
+      }
+    });
+
+    volumeControl.addEventListener("input", () => {
+      music.volume = volumeControl.value;
+    });
+
+    music.volume = 0.3;
+    music.addEventListener("play", () => toggleBtn.classList.add("playing"));
+    music.addEventListener("pause", () => toggleBtn.classList.remove("playing"));
+  </script>
+
+  <script src="sounds.js"></script>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
