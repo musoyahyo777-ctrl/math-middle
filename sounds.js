@@ -20,42 +20,123 @@ class SoundManager {
         }
     }
 
-initCorrectAnswerMusic() {
-    // Файл в той же папке что и sounds.js
-    this.correctAnswerMusic = new Audio('./correct-sound.mp3');
-    this.correctAnswerMusic.volume = 0.4;
-    
-    this.correctAnswerMusic.addEventListener('error', (e) => {
-        console.log('❌ Ошибка загрузки correct-sound.mp3');
-    });
-    
-    this.correctAnswerMusic.addEventListener('canplaythrough', () => {
-        console.log('✅ correct-sound.mp3 готов к воспроизведению');
-    });
-}
+    initCorrectAnswerMusic() {
+        // ПРОБУЕМ ЗАГРУЗИТЬ ФАЙЛ
+        this.correctAnswerMusic = new Audio('correct-sound.mp3');
+        this.correctAnswerMusic.volume = 0.6;
+        
+        this.correctAnswerMusic.addEventListener('error', (e) => {
+            console.log('❌ Файл correct-sound.mp3 не найден, используем generated sound');
+            this.createFallbackMusic();
+        });
+        
+        this.correctAnswerMusic.addEventListener('canplaythrough', () => {
+            console.log('✅ Файл correct-sound.mp3 готов к воспроизведению');
+        });
+        
+        // Проверяем через секунду, загрузился ли файл
+        setTimeout(() => {
+            if (this.correctAnswerMusic.readyState === 0) {
+                console.log('⚠️ Файл не загружается, переключаемся на generated sound');
+                this.createFallbackMusic();
+            }
+        }, 1000);
+    }
 
-    playCorrectAnswerMusic() {
-        if (this.correctAnswerMusic) {
-            try {
-                this.correctAnswerMusic.currentTime = 0;
-                this.correctAnswerMusic.play().catch(e => {
-                    console.log('Не удалось воспроизвести музыку:', e);
-                });
+    createFallbackMusic() {
+        // СОЗДАЕМ РЕЗЕРВНУЮ МУЗЫКУ ЧЕРЕЗ WEB AUDIO
+        this.correctAnswerMusic = {
+            play: () => {
+                if (!this.audioContext || this.isCorrectMusicPlaying) return;
+                
+                console.log('🎵 Играем generated музыку победы!');
                 this.isCorrectMusicPlaying = true;
+                const now = this.audioContext.currentTime;
+                
+                // Красивая победная мелодия
+                const melody = [
+                    {freq: 523.25, time: 0},    // C5
+                    {freq: 659.25, time: 0.3},  // E5
+                    {freq: 783.99, time: 0.6},  // G5
+                    {freq: 1046.50, time: 0.9}, // C6
+                    {freq: 783.99, time: 1.2},  // G5
+                    {freq: 1046.50, time: 1.5}, // C6
+                    {freq: 1174.66, time: 1.8}, // D6
+                    {freq: 1318.51, time: 2.1}  // E6
+                ];
+                
+                melody.forEach(note => {
+                    setTimeout(() => {
+                        if (!this.isCorrectMusicPlaying) return;
+                        
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(note.freq, now);
+                        
+                        // Плавное появление и затухание
+                        gainNode.gain.setValueAtTime(0, now);
+                        gainNode.gain.linearRampToValueAtTime(0.3, now + 0.1);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                        
+                        oscillator.start(now + note.time);
+                        oscillator.stop(now + note.time + 0.5);
+                        
+                    }, note.time * 1000);
+                });
                 
                 setTimeout(() => {
-                    this.stopCorrectAnswerMusic();
-                }, 5000);
+                    this.isCorrectMusicPlaying = false;
+                }, 3000);
+            },
+            pause: () => {
+                this.isCorrectMusicPlaying = false;
+            }
+        };
+    }
+
+    playCorrectAnswerMusic() {
+        console.log('🔊 Воспроизводим музыку победы...');
+        
+        if (typeof this.correctAnswerMusic.play === 'function') {
+            // Если это generated music
+            this.correctAnswerMusic.play();
+        } else {
+            // Если это Audio object
+            try {
+                this.correctAnswerMusic.currentTime = 0;
+                this.correctAnswerMusic.play().then(() => {
+                    console.log('✅ Файловая музыка начала играть!');
+                    this.isCorrectMusicPlaying = true;
+                    
+                    setTimeout(() => {
+                        this.stopCorrectAnswerMusic();
+                    }, 5000);
+                    
+                }).catch(e => {
+                    console.log('❌ Ошибка воспроизведения файла:', e);
+                    // Пробуем generated music как запасной вариант
+                    this.createFallbackMusic();
+                    this.correctAnswerMusic.play();
+                });
             } catch (e) {
-                console.log('Ошибка воспроизведения музыки:', e);
+                console.log('❌ Ошибка в playCorrectAnswerMusic:', e);
             }
         }
     }
 
     stopCorrectAnswerMusic() {
         if (this.correctAnswerMusic) {
-            this.correctAnswerMusic.pause();
-            this.correctAnswerMusic.currentTime = 0;
+            if (typeof this.correctAnswerMusic.pause === 'function') {
+                this.correctAnswerMusic.pause();
+                if (this.correctAnswerMusic.currentTime !== undefined) {
+                    this.correctAnswerMusic.currentTime = 0;
+                }
+            }
             this.isCorrectMusicPlaying = false;
         }
     }
@@ -306,6 +387,3 @@ initCorrectAnswerMusic() {
 }
 
 const soundManager = new SoundManager();
-
-
-
