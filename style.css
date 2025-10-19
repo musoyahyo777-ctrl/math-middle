@@ -174,6 +174,12 @@ button:active {
     transform: translateY(-1px);
 }
 
+.semester-btn {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    animation: bounceIn 0.6s ease-out;
+    position: relative;
+}
+
 .topic-btn {
     background: linear-gradient(135deg, #8b5cf6, #7c3aed);
     animation: bounceIn 0.6s ease-out;
@@ -241,7 +247,7 @@ button:active {
 }
 
 .close-btn::before {
-    content: '×';
+    content: '';
     color: white;
     font-size: 28px;
     line-height: 1;
@@ -306,6 +312,19 @@ button:active {
     left: 20px;
     font-size: 1.5rem;
     opacity: 0.3;
+}
+
+#question-image-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.question-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 2px solid var(--primary);
 }
 
 #result-message {
@@ -498,13 +517,6 @@ button:active {
     }
 }
 
-.topic-btn:nth-child(1) { animation-delay: 0.1s; }
-.topic-btn:nth-child(2) { animation-delay: 0.2s; }
-.topic-btn:nth-child(3) { animation-delay: 0.3s; }
-.topic-btn:nth-child(4) { animation-delay: 0.4s; }
-.topic-btn:nth-child(5) { animation-delay: 0.5s; }
-.topic-btn:nth-child(6) { animation-delay: 0.6s; }
-
 .firework-particle {
     position: fixed;
     pointer-events: none;
@@ -557,11 +569,9 @@ button:active {
 
 .mega-firework {
     position: fixed;
-    border-radius: 50%;
     pointer-events: none;
     z-index: 10002;
-    transform: translate(-50%, -50%);
-    animation: megaFlash 1.5s ease-out forwards;
+    animation: megaFlash 2s ease-out forwards;
 }
 
 @keyframes megaFlash {
@@ -578,50 +588,6 @@ button:active {
         opacity: 0;
     }
 }
-
-.wave {
-    position: fixed;
-    border: 3px solid;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 10001;
-    transform: translate(-50%, -50%);
-    animation: waveExpand 1.2s ease-out forwards;
-}
-
-@keyframes waveExpand {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(4);
-        opacity: 0;
-    }
-}
-
-
-@keyframes miniFireworkExplosion {
-    0% {
-        transform: translate(-50%, -50%) scale(0) rotate(0deg);
-        opacity: 1;
-    }
-    50% {
-        transform: translate(
-            calc(-50% + var(--tx) * 0.5), 
-            calc(-50% + var(--ty) * 0.5)
-        ) scale(1) rotate(var(--rotation));
-        opacity: 0.8;
-    }
-    100% {
-        transform: translate(
-            calc(-50% + var(--tx)), 
-            calc(-50% + var(--ty))
-        ) scale(0) rotate(calc(var(--rotation) * 2));
-        opacity: 0;
-    }
-}
-
 
 @media (max-width: 768px) {
     body {
@@ -663,6 +629,10 @@ button:active {
     #question-text {
         font-size: 1.2rem;
         padding: 20px;
+    }
+    
+    .question-image {
+        max-height: 200px;
     }
     
     .score-display {
@@ -736,78 +706,6 @@ button:active {
     text-align: center;
 }
 
-/* ФЕЙЕРВЕРКИ НА ВЕСЬ ЭКРАН */
-.firework-particle {
-    position: fixed;
-    pointer-events: none;
-    z-index: 10000;
-    animation: fireworkExplosion 1.5s ease-out forwards;
-}
-
-@keyframes fireworkExplosion {
-    0% {
-        transform: translate(-50%, -50%) scale(0) rotate(0deg);
-        opacity: 1;
-    }
-    50% {
-        transform: translate(
-            calc(-50% + var(--tx) * 0.5), 
-            calc(-50% + var(--ty) * 0.5)
-        ) scale(1.5) rotate(var(--rotation));
-        opacity: 0.8;
-    }
-    100% {
-        transform: translate(
-            calc(-50% + var(--tx)), 
-            calc(-50% + var(--ty))
-        ) scale(0) rotate(calc(var(--rotation) * 2));
-        opacity: 0;
-    }
-}
-
-.firework-flash {
-    position: fixed;
-    pointer-events: none;
-    z-index: 10001;
-    animation: flashEffect 0.8s ease-out forwards;
-}
-
-@keyframes flashEffect {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 1;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0.7;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1.5);
-        opacity: 0;
-    }
-}
-
-.mega-firework {
-    position: fixed;
-    pointer-events: none;
-    z-index: 10002;
-    animation: megaFlash 2s ease-out forwards;
-}
-
-@keyframes megaFlash {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 1;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0.8;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(2);
-        opacity: 0;
-    }
-}
 .music-controls {
   display: flex;
   align-items: center;
@@ -822,7 +720,6 @@ button:active {
   margin: 20px auto;
 }
 
-/* 🎚️ Ползунок громкости */
 #volume {
   -webkit-appearance: none;
   width: 120px;
@@ -847,7 +744,6 @@ button:active {
   transform: scale(1.2);
 }
 
-/* ▶️ Кнопка */
 #toggleBtn {
   width: 45px;
   height: 45px;
