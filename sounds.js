@@ -21,7 +21,7 @@ class SoundManager {
     }
 
     initCorrectAnswerMusic() {
-        this.correctAnswerMusic = new Audio('correct-sound.mp3');
+        this.correctAnswerMusic = new Audio('./correct-sound.mp3');
         this.correctAnswerMusic.volume = 0.4;
         this.correctAnswerMusic.preload = 'auto';
         
@@ -306,4 +306,5 @@ class SoundManager {
 }
 
 const soundManager = new SoundManager();
+
 
