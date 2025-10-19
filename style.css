@@ -749,7 +749,7 @@ button:active {
     width: 45px;
     height: 45px;
     border: none;
-    border-radius: 30%; /* ИДЕАЛЬНЫЙ КРУГ */
+    border-radius: 20%; /* ИДЕАЛЬНЫЙ КРУГ */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -782,3 +782,4 @@ button:active {
         box-shadow: 0 0 18px rgba(99, 102, 241, 0.8); 
     }
 }
+
