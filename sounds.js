@@ -20,19 +20,19 @@ class SoundManager {
         }
     }
 
-    initCorrectAnswerMusic() {
-        this.correctAnswerMusic = new Audio('./correct-sound.mp3');
-        this.correctAnswerMusic.volume = 0.4;
-        this.correctAnswerMusic.preload = 'auto';
-        
-        this.correctAnswerMusic.addEventListener('error', (e) => {
-            console.log('Ошибка загрузки музыки для правильных ответов:', e);
-        });
-        
-        this.correctAnswerMusic.addEventListener('canplaythrough', () => {
-            console.log('Музыка для правильных ответов готова к воспроизведению');
-        });
-    }
+initCorrectAnswerMusic() {
+    // Файл в той же папке что и sounds.js
+    this.correctAnswerMusic = new Audio('./correct-sound.mp3');
+    this.correctAnswerMusic.volume = 0.4;
+    
+    this.correctAnswerMusic.addEventListener('error', (e) => {
+        console.log('❌ Ошибка загрузки correct-sound.mp3');
+    });
+    
+    this.correctAnswerMusic.addEventListener('canplaythrough', () => {
+        console.log('✅ correct-sound.mp3 готов к воспроизведению');
+    });
+}
 
     playCorrectAnswerMusic() {
         if (this.correctAnswerMusic) {
@@ -306,5 +306,6 @@ class SoundManager {
 }
 
 const soundManager = new SoundManager();
+
 
 
