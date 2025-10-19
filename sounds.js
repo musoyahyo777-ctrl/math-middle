@@ -3,7 +3,9 @@ class SoundManager {
         this.sounds = {};
         this.audioContext = null;
         this.backgroundMusic = null;
+        this.correctAnswerMusic = null;
         this.isMusicPlaying = false;
+        this.isCorrectMusicPlaying = false;
         this.init();
     }
 
@@ -12,9 +14,55 @@ class SoundManager {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.initSounds();
             this.initBackgroundMusic();
+            this.initCorrectAnswerMusic();
         } catch (e) {
             console.log('Web Audio API не поддерживается');
         }
+    }
+
+    initCorrectAnswerMusic() {
+        this.correctAnswerMusic = new Audio('music/correct-sound.mp3');
+        this.correctAnswerMusic.volume = 0.4;
+        this.correctAnswerMusic.preload = 'auto';
+        
+        this.correctAnswerMusic.addEventListener('error', (e) => {
+            console.log('Ошибка загрузки музыки для правильных ответов:', e);
+        });
+        
+        this.correctAnswerMusic.addEventListener('canplaythrough', () => {
+            console.log('Музыка для правильных ответов готова к воспроизведению');
+        });
+    }
+
+    playCorrectAnswerMusic() {
+        if (this.correctAnswerMusic) {
+            try {
+                this.correctAnswerMusic.currentTime = 0;
+                this.correctAnswerMusic.play().catch(e => {
+                    console.log('Не удалось воспроизвести музыку:', e);
+                });
+                this.isCorrectMusicPlaying = true;
+                
+                setTimeout(() => {
+                    this.stopCorrectAnswerMusic();
+                }, 5000);
+            } catch (e) {
+                console.log('Ошибка воспроизведения музыки:', e);
+            }
+        }
+    }
+
+    stopCorrectAnswerMusic() {
+        if (this.correctAnswerMusic) {
+            this.correctAnswerMusic.pause();
+            this.correctAnswerMusic.currentTime = 0;
+            this.isCorrectMusicPlaying = false;
+        }
+    }
+
+    stopAllMusic() {
+        this.stopBackgroundMusic();
+        this.stopCorrectAnswerMusic();
     }
 
     initSounds() {
@@ -29,7 +77,6 @@ class SoundManager {
     }
 
     initBackgroundMusic() {
-        // Создаем простую мелодию для фона
         this.backgroundMusic = {
             play: () => {
                 if (!this.audioContext || this.isMusicPlaying) return;
@@ -37,8 +84,7 @@ class SoundManager {
                 this.isMusicPlaying = true;
                 const now = this.audioContext.currentTime;
                 
-                // Создаем несколько осцилляторов для гармонии
-                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                const notes = [523.25, 659.25, 783.99, 1046.50];
                 const durations = [0.3, 0.4, 0.5, 0.6];
                 
                 notes.forEach((freq, index) => {
@@ -63,7 +109,6 @@ class SoundManager {
                     }, index * 200);
                 });
                 
-                // Повторяем мелодию через 2 секунды
                 setTimeout(() => {
                     if (this.isMusicPlaying) {
                         this.backgroundMusic.play();
@@ -151,7 +196,6 @@ class SoundManager {
             
             const now = this.audioContext.currentTime;
             
-            // Создаем несколько взрывов для эффекта фейерверка
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
                     this.createFireworkExplosion(now + i * 0.2);
@@ -169,7 +213,6 @@ class SoundManager {
         filter.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
         
-        // Начальная высокая частота, затем резкое падение
         oscillator.frequency.setValueAtTime(1200, startTime);
         oscillator.frequency.exponentialRampToValueAtTime(200, startTime + 0.5);
         
@@ -195,12 +238,11 @@ class SoundManager {
             gainNode.connect(this.audioContext.destination);
             
             oscillator.type = 'triangle';
-            // Победная мелодия
-            oscillator.frequency.setValueAtTime(523.25, now); // C5
-            oscillator.frequency.setValueAtTime(659.25, now + 0.15); // E5
-            oscillator.frequency.setValueAtTime(783.99, now + 0.3); // G5
-            oscillator.frequency.setValueAtTime(1046.50, now + 0.45); // C6
-            oscillator.frequency.setValueAtTime(1318.51, now + 0.6); // E6
+            oscillator.frequency.setValueAtTime(523.25, now);
+            oscillator.frequency.setValueAtTime(659.25, now + 0.15);
+            oscillator.frequency.setValueAtTime(783.99, now + 0.3);
+            oscillator.frequency.setValueAtTime(1046.50, now + 0.45);
+            oscillator.frequency.setValueAtTime(1318.51, now + 0.6);
             
             gainNode.gain.setValueAtTime(0.3, now);
             gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1);
@@ -215,8 +257,7 @@ class SoundManager {
             if (!this.audioContext) return;
             
             const now = this.audioContext.currentTime;
-            // Победный аккорд
-            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            const notes = [523.25, 659.25, 783.99, 1046.50];
             
             notes.forEach(freq => {
                 const oscillator = this.audioContext.createOscillator();
@@ -239,7 +280,6 @@ class SoundManager {
 
     play(soundName) {
         if (this.sounds[soundName] && this.audioContext) {
-            // Возобновляем контекст если он приостановлен
             if (this.audioContext.state === 'suspended') {
                 this.audioContext.resume();
             }
@@ -247,7 +287,6 @@ class SoundManager {
         }
     }
 
-    // Методы для фоновой музыки
     playBackgroundMusic() {
         if (this.backgroundMusic && !this.isMusicPlaying) {
             this.backgroundMusic.play();
@@ -260,7 +299,6 @@ class SoundManager {
         }
     }
 
-    // Метод для победной музыки при длинной серии
     playVictoryMusic() {
         this.playBackgroundMusic();
         this.play('victory');
