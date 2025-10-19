@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Математика Группа Middle</title>
+  <title>Математика IDC</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* 🎧 Мини-плеер */
+
     .music-controls {
       display: flex;
       align-items: center;
@@ -21,7 +21,7 @@
       margin: 15px auto;
     }
 
-    /* ▶️ Круглая кнопка */
+
     #toggleBtn {
       width: 35px;
       height: 55px;
@@ -52,7 +52,7 @@
       50% { box-shadow: 0 0 18px rgba(99,102,241,0.8); }
     }
 
-    /* 🎚️ Ползунок громкости */
+
     #volume {
       -webkit-appearance: none;
       width: 110px;
@@ -80,31 +80,37 @@
 </head>
 <body>
 
-  <!-- 🎵 Мини-плеер -->
+
   <section class="music-controls">
-    <button id="toggleBtn">🎵</button>
+    <button id="toggleBtn">▶️</button>
     <input type="range" id="volume" min="0" max="1" step="0.01" value="0.3">
     <audio id="bg-music" loop>
-      <source src="music2.mp3" type="audio/mpeg">
+      <source src="music/background-music.mp3" type="audio/mpeg">
     </audio>
   </section>
 
-  <!-- 🧮 Основной контент -->
   <div id="score" class="score-display">✅ 0 / 0</div>
 
-  <div id="topic-selection-screen" class="screen active">
-    <h1>Математика Группа Middle</h1>
+
+  <div id="semester-selection-screen" class="screen active">
+    <h1>Математика IDC</h1>
+    <h2>Выберите семестр</h2>
+    <button class="semester-btn" data-semester-id="1">Семестр 1</button>
+    <button class="semester-btn" data-semester-id="2">Семестр 2</button>
+    <button class="semester-btn" data-semester-id="3">Семестр 3</button>
+  </div>
+
+  <div id="topic-selection-screen" class="screen">
+    <button class="close-btn" title="Назад к семестрам"></button>
+    <h1 id="selected-semester-name"></h1>
     <h2>Выберите тему</h2>
-    <button class="topic-btn" data-topic-id="1">Тема 4: КНД и СНД</button>
-    <button class="topic-btn" data-topic-id="2">Квадратные уравнения</button>
-    <button class="topic-btn" data-topic-id="3">Теорема Пифагора</button>
-    <button class="topic-btn" data-topic-id="4">Проценты и задачи</button>
-    <button class="topic-btn" data-topic-id="5">Степени и корни</button>
-    <button class="topic-btn" data-topic-id="6">Системы уравнений</button>
+    <div class="topics-container">
+
+    </div>
   </div>
 
   <div id="level-selection-screen" class="screen">
-    <button class="close-btn" title="Главное меню"></button>
+    <button class="close-btn" title="Назад к темам"></button>
     <h1 id="selected-topic-name"></h1>
     <h2>Выберите уровень сложности</h2>
     <button class="level-btn" data-level="1">Уровень 1</button>
@@ -120,6 +126,7 @@
     <p>Уровень сложности: <span id="current-level"></span></p>
     <div id="question-container">
       <p id="question-text"></p>
+      <div id="question-image-container"></div>
       <input type="text" id="answer-input" placeholder="Введите ваш ответ">
       <button id="submit-answer-btn">Проверить ответ</button>
     </div>
@@ -133,15 +140,11 @@
     <button id="next-question-btn">Следующий пример</button>
   </div>
 
-  <!-- 🎧 Скрипт управления музыкой -->
+
   <script>
     const music = document.getElementById("bg-music");
     const volumeControl = document.getElementById("volume");
     const toggleBtn = document.getElementById("toggleBtn");
-
-    document.addEventListener("click", () => {
-      if (music.paused) music.play();
-    }, { once: true });
 
     toggleBtn.addEventListener("click", () => {
       if (music.paused) {
@@ -149,7 +152,7 @@
         toggleBtn.textContent = "⏸️";
       } else {
         music.pause();
-        toggleBtn.textContent = "🎵";
+        toggleBtn.textContent = "▶️";
       }
     });
 
