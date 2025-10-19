@@ -13,13 +13,48 @@ const levelScreen = document.getElementById('level-selection-screen');
 const questionScreen = document.getElementById('question-screen');
 const resultScreen = document.getElementById('result-screen');
 
+// ГЛОБАЛЬНЫЙ ФИКС ДЛЯ КНОПКИ МУЗЫКИ
+let musicButtonFixed = false;
+
+function fixMusicButton() {
+    const toggleBtn = document.getElementById('toggleBtn');
+    const music = document.getElementById('bg-music');
+    
+    if (toggleBtn && music) {
+        // Убираем старые обработчики
+        const newToggleBtn = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+        
+        // Новый обработчик
+        document.getElementById('toggleBtn').addEventListener('click', () => {
+            if (music.paused) {
+                music.play();
+                document.getElementById('toggleBtn').innerHTML = "<span>⏸️</span>";
+            } else {
+                music.pause();
+                document.getElementById('toggleBtn').innerHTML = "<span>▶️</span>";
+            }
+        });
+        
+        // Устанавливаем начальное состояние
+        document.getElementById('toggleBtn').innerHTML = "<span>▶️</span>";
+    }
+}
+
+function ensureMusicButtonFix() {
+    if (!musicButtonFixed) {
+        fixMusicButton();
+        musicButtonFixed = true;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     initApp();
+    setTimeout(ensureMusicButtonFix, 100);
 });
 
 function initApp() {
-
+    // Обработчики для кнопки "Закрыть"
     document.querySelectorAll('.close-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const currentScreen = this.closest('.screen').id;
@@ -27,7 +62,7 @@ function initApp() {
         });
     });
 
-
+    // Обработчики клика для всех кнопок
     document.querySelectorAll('button').forEach(btn => {
         if (!btn.classList.contains('close-btn')) {
             btn.addEventListener('click', () => {
@@ -36,7 +71,7 @@ function initApp() {
         }
     });
 
-
+    // Показываем счет при начале игры
     document.getElementById('score').style.display = 'block';
 }
 
@@ -74,7 +109,7 @@ function goToTopicSelection() {
     showScreen('topic-selection-screen');
 }
 
-
+// Обработчики для кнопок семестров
 document.querySelectorAll('.semester-btn').forEach(button => {
     button.addEventListener('click', (e) => {
         currentState.selectedSemesterId = parseInt(e.target.dataset.semesterId);
@@ -117,10 +152,25 @@ document.querySelectorAll('.level-btn').forEach(button => {
 });
 
 function loadQuestion() {
+    // Проверка существования данных
+    if (!appData || !appData.semesters) {
+        alert('Ошибка загрузки данных!');
+        return;
+    }
+    
     const semester = appData.semesters.find(s => s.id === currentState.selectedSemesterId);
+    if (!semester) {
+        alert('Семестр не найден!');
+        return;
+    }
+    
     const topic = semester.topics.find(t => t.id === currentState.selectedTopicId);
+    if (!topic) {
+        alert('Тема не найдена!');
+        return;
+    }
+    
     const questions = topic.levels[currentState.selectedLevel];
-
     if (!questions || questions.length === 0) {
         alert('В этой категории пока нет вопросов!');
         return;
@@ -133,18 +183,18 @@ function loadQuestion() {
     document.getElementById('current-level').textContent = currentState.selectedLevel;
     document.getElementById('question-text').textContent = question.question;
     document.getElementById('answer-input').value = '';
-    
 
+    // Безопасная работа с изображениями
     const imageContainer = document.getElementById('question-image-container');
-    if (question.image) {
-        imageContainer.innerHTML = `<img src="${question.image}" alt="Иллюстрация к задаче" class="question-image">`;
+    if (question.image && question.image.trim() !== '') {
+        imageContainer.innerHTML = `<img src="${question.image}" alt="Иллюстрация к задаче" class="question-image" onerror="this.style.display='none'">`;
         imageContainer.style.display = 'block';
     } else {
         imageContainer.innerHTML = '';
         imageContainer.style.display = 'none';
     }
-    
 
+    // Фокус на поле ввода
     document.getElementById('answer-input').focus();
     
     const input = document.getElementById('answer-input');
@@ -153,7 +203,7 @@ function loadQuestion() {
         input.style.animation = 'pulse 2s infinite';
     }, 10);
 
-
+    // Убираем старые обработчики и добавляем новые
     const submitBtn = document.getElementById('submit-answer-btn');
     submitBtn.replaceWith(submitBtn.cloneNode(true));
     document.getElementById('submit-answer-btn').onclick = () => {
@@ -173,11 +223,11 @@ function checkAnswer(userAnswer, correctAnswer) {
     if (isCorrect) {
         currentState.correctAnswers++;
         soundManager.play('correct');
-        
 
+        // Воспроизводим музыку при правильном ответе
         soundManager.playCorrectAnswerMusic();
-        
 
+        // Запускаем фейерверки в зависимости от серии
         if (currentState.correctAnswers >= 10) {
             createMegaFireworks();
             soundManager.playVictoryMusic();
@@ -191,8 +241,8 @@ function checkAnswer(userAnswer, correctAnswer) {
         } else {
             createMiniFireworks();
         }
-        
 
+        // Специальный звук для серии
         if (currentState.correctAnswers >= 3) {
             setTimeout(() => soundManager.play('success'), 300);
         }
@@ -225,7 +275,7 @@ function checkAnswer(userAnswer, correctAnswer) {
     correctAnswerElem.textContent = correctAnswer;
     correctAnswerElem.classList.add('floating');
 
-   
+    // Исправляем кнопку "Следующий пример"
     const nextBtn = document.getElementById('next-question-btn');
     nextBtn.replaceWith(nextBtn.cloneNode(true));
     document.getElementById('next-question-btn').onclick = () => {
@@ -238,11 +288,15 @@ function updateScore() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) {
         scoreElement.textContent = `✅ ${currentState.correctAnswers} / ${currentState.totalAnswers}`;
+        
+        // Правильная проверка серии
         if (currentState.correctAnswers >= 3) {
             scoreElement.classList.add('streak-animation');
             setTimeout(() => {
                 scoreElement.classList.remove('streak-animation');
             }, 1000);
+        } else {
+            scoreElement.classList.remove('streak-animation');
         }
     }
 }
@@ -281,6 +335,7 @@ function createMiniFireworks() {
 
 function createMegaFireworks() {
     const container = document.body;
+    if (!container) return;
     
     const positions = [
         { x: 10, y: 10 },
@@ -337,6 +392,7 @@ function createMegaFireworks() {
 function createFireworkAtPosition(x, y, particleCount = 60, maxSize = 20) {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8c00', '#8a2be2'];
     const container = document.body;
+    if (!container) return;
     
     for (let i = 0; i < particleCount; i++) {
         setTimeout(() => {
@@ -405,6 +461,9 @@ function createFireworkAtPosition(x, y, particleCount = 60, maxSize = 20) {
     }, 100);
 }
 
+// Сохраняем оригинальную функцию showScreen
+const originalShowScreen = showScreen;
+
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
@@ -413,8 +472,12 @@ function showScreen(screenId) {
     const activeScreen = document.getElementById(screenId);
     activeScreen.classList.add('active');
     
-    document.querySelectorAll('.firework-particle, .firework-flash, .mega-firework, .wave').forEach(fw => fw.remove());
+    // Убираем все фейерверки при смене экрана
+    document.querySelectorAll('.firework-particle, .firework-flash, .mega-firework, .wave').forEach(fw => {
+        if (fw.parentNode) fw.parentNode.removeChild(fw);
+    });
     
+    // Останавливаем музыку если уходим с экрана вопроса/результата
     if (screenId !== 'question-screen' && screenId !== 'result-screen') {
         soundManager.stopAllMusic();
     }
@@ -424,4 +487,7 @@ function showScreen(screenId) {
             btn.style.animation = `bounceIn 0.6s ease-out ${index * 0.1}s both`;
         });
     }
+    
+    // Фиксим кнопку музыки при каждом показе экрана
+    setTimeout(ensureMusicButtonFix, 50);
 }
