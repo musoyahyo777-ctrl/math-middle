@@ -1,4 +1,5 @@
 let currentState = {
+    selectedSemesterId: null,
     selectedTopicId: null,
     selectedLevel: null,
     currentQuestionIndex: null,
@@ -6,23 +7,27 @@ let currentState = {
     totalAnswers: 0
 };
 
+const semesterScreen = document.getElementById('semester-selection-screen');
 const topicScreen = document.getElementById('topic-selection-screen');
 const levelScreen = document.getElementById('level-selection-screen');
 const questionScreen = document.getElementById('question-screen');
 const resultScreen = document.getElementById('result-screen');
 
-// Инициализация при загрузке
+
 document.addEventListener('DOMContentLoaded', function() {
     initApp();
 });
 
 function initApp() {
-    // Обработчики для кнопки "Закрыть" (крестик)
+
     document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', goToMainMenu);
+        btn.addEventListener('click', function() {
+            const currentScreen = this.closest('.screen').id;
+            handleCloseButton(currentScreen);
+        });
     });
 
-    // Обработчики клика для всех кнопок
+
     document.querySelectorAll('button').forEach(btn => {
         if (!btn.classList.contains('close-btn')) {
             btn.addEventListener('click', () => {
@@ -31,28 +36,78 @@ function initApp() {
         }
     });
 
-    // Показываем счет при начале игры
+
     document.getElementById('score').style.display = 'block';
 }
 
-function goToMainMenu() {
+function handleCloseButton(currentScreenId) {
     soundManager.play('click');
-    soundManager.stopBackgroundMusic(); 
+    
+    switch(currentScreenId) {
+        case 'topic-selection-screen':
+            goToSemesterSelection();
+            break;
+        case 'level-selection-screen':
+            goToTopicSelection();
+            break;
+        case 'question-screen':
+        case 'result-screen':
+            soundManager.stopAllMusic();
+            goToSemesterSelection();
+            break;
+        default:
+            goToSemesterSelection();
+    }
+}
+
+function goToSemesterSelection() {
+    soundManager.stopAllMusic();
+    currentState.selectedSemesterId = null;
+    currentState.selectedTopicId = null;
+    currentState.selectedLevel = null;
+    showScreen('semester-selection-screen');
+}
+
+function goToTopicSelection() {
+    currentState.selectedTopicId = null;
+    currentState.selectedLevel = null;
     showScreen('topic-selection-screen');
 }
-document.querySelectorAll('.topic-btn').forEach(button => {
+
+
+document.querySelectorAll('.semester-btn').forEach(button => {
     button.addEventListener('click', (e) => {
-        currentState.selectedTopicId = parseInt(e.target.dataset.topicId);
-        const topic = appData.topics.find(t => t.id === currentState.selectedTopicId);
-        document.getElementById('selected-topic-name').textContent = topic.name;
-        showScreen('level-selection-screen');
+        currentState.selectedSemesterId = parseInt(e.target.dataset.semesterId);
+        const semester = appData.semesters.find(s => s.id === currentState.selectedSemesterId);
+        document.getElementById('selected-semester-name').textContent = semester.name;
+        showTopicsForSemester(semester);
+        showScreen('topic-selection-screen');
     });
 });
+
+function showTopicsForSemester(semester) {
+    const topicsContainer = document.querySelector('.topics-container');
+    topicsContainer.innerHTML = '';
+    
+    semester.topics.forEach(topic => {
+        const topicBtn = document.createElement('button');
+        topicBtn.className = 'topic-btn';
+        topicBtn.textContent = topic.name;
+        topicBtn.dataset.topicId = topic.id;
+        topicBtn.addEventListener('click', (e) => {
+            currentState.selectedTopicId = parseInt(e.target.dataset.topicId);
+            const topic = semester.topics.find(t => t.id === currentState.selectedTopicId);
+            document.getElementById('selected-topic-name').textContent = topic.name;
+            showScreen('level-selection-screen');
+        });
+        topicsContainer.appendChild(topicBtn);
+    });
+}
 
 document.querySelectorAll('.level-btn').forEach(button => {
     button.addEventListener('click', (e) => {
         currentState.selectedLevel = parseInt(e.target.dataset.level);
-        // Сброс счетчика при начале новой сессии
+
         currentState.correctAnswers = 0;
         currentState.totalAnswers = 0;
         updateScore();
@@ -62,7 +117,8 @@ document.querySelectorAll('.level-btn').forEach(button => {
 });
 
 function loadQuestion() {
-    const topic = appData.topics.find(t => t.id === currentState.selectedTopicId);
+    const semester = appData.semesters.find(s => s.id === currentState.selectedSemesterId);
+    const topic = semester.topics.find(t => t.id === currentState.selectedTopicId);
     const questions = topic.levels[currentState.selectedLevel];
 
     if (!questions || questions.length === 0) {
@@ -78,7 +134,17 @@ function loadQuestion() {
     document.getElementById('question-text').textContent = question.question;
     document.getElementById('answer-input').value = '';
     
-    // Фокус на поле ввода
+
+    const imageContainer = document.getElementById('question-image-container');
+    if (question.image) {
+        imageContainer.innerHTML = `<img src="${question.image}" alt="Иллюстрация к задаче" class="question-image">`;
+        imageContainer.style.display = 'block';
+    } else {
+        imageContainer.innerHTML = '';
+        imageContainer.style.display = 'none';
+    }
+    
+
     document.getElementById('answer-input').focus();
     
     const input = document.getElementById('answer-input');
@@ -87,7 +153,7 @@ function loadQuestion() {
         input.style.animation = 'pulse 2s infinite';
     }, 10);
 
-    // Убираем старые обработчики и добавляем новые
+
     const submitBtn = document.getElementById('submit-answer-btn');
     submitBtn.replaceWith(submitBtn.cloneNode(true));
     document.getElementById('submit-answer-btn').onclick = () => {
@@ -108,31 +174,32 @@ function checkAnswer(userAnswer, correctAnswer) {
         currentState.correctAnswers++;
         soundManager.play('correct');
         
-        // Запускаем фейерверки и музыку в зависимости от серии
+
+        soundManager.playCorrectAnswerMusic();
+        
+
         if (currentState.correctAnswers >= 10) {
             createMegaFireworks();
-            soundManager.playVictoryMusic(); // Победная музыка для серии 10+
+            soundManager.playVictoryMusic();
         } else if (currentState.correctAnswers >= 5) {
             createFireworks();
             setTimeout(() => createFireworks(), 500);
-            soundManager.playBackgroundMusic(); // Фоновая музыка для серии 5+
         } else if (currentState.correctAnswers >= 3) {
             createFireworks();
-            soundManager.playBackgroundMusic(); // Фоновая музыка для серии 3+
         } else if (currentState.correctAnswers >= 2) {
             createMiniFireworks();
         } else {
             createMiniFireworks();
         }
         
-        // Специальный звук для серии
+
         if (currentState.correctAnswers >= 3) {
             setTimeout(() => soundManager.play('success'), 300);
         }
     } else {
         soundManager.play('wrong');
-        soundManager.stopBackgroundMusic(); // Останавливаем музыку при ошибке
-        currentState.correctAnswers = 0; // Сбрасываем серию
+        soundManager.stopAllMusic();
+        currentState.correctAnswers = 0;
     }
     
     updateScore();
@@ -158,7 +225,7 @@ function checkAnswer(userAnswer, correctAnswer) {
     correctAnswerElem.textContent = correctAnswer;
     correctAnswerElem.classList.add('floating');
 
-    // Исправляем кнопку "Следующий пример"
+   
     const nextBtn = document.getElementById('next-question-btn');
     nextBtn.replaceWith(nextBtn.cloneNode(true));
     document.getElementById('next-question-btn').onclick = () => {
@@ -166,6 +233,7 @@ function checkAnswer(userAnswer, correctAnswer) {
         showScreen('question-screen');
     };
 }
+
 function updateScore() {
     const scoreElement = document.getElementById('score');
     if (scoreElement) {
@@ -179,12 +247,11 @@ function updateScore() {
     }
 }
 
-// ФЕЙЕРВЕРКИ НА ВЕСЬ ЭКРАН
+// ФЕЙЕРВЕРКИ
 function createFireworks() {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8c00', '#8a2be2', '#ff1493', '#00ff7f'];
     const container = document.body;
     
-    // Создаем 6 фейерверков в случайных местах экрана
     for (let i = 0; i < 6; i++) {
         setTimeout(() => {
             const x = Math.random() * 100;
@@ -201,7 +268,6 @@ function createMiniFireworks() {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
     const container = document.body;
     
-    // Создаем 3 мини-фейерверка
     for (let i = 0; i < 3; i++) {
         setTimeout(() => {
             const x = 20 + Math.random() * 60;
@@ -216,22 +282,20 @@ function createMiniFireworks() {
 function createMegaFireworks() {
     const container = document.body;
     
-    // Создаем мега-фейерверки во всех углах и центре
     const positions = [
-        { x: 10, y: 10 },    // Левый верх
-        { x: 90, y: 10 },    // Правый верх
-        { x: 10, y: 90 },    // Левый низ
-        { x: 90, y: 90 },    // Правый низ
-        { x: 50, y: 50 },    // Центр
-        { x: 25, y: 75 },    // Левый низ ближе к центру
-        { x: 75, y: 25 }     // Правый верх ближе к центру
+        { x: 10, y: 10 },
+        { x: 90, y: 10 },
+        { x: 10, y: 90 },
+        { x: 90, y: 90 },
+        { x: 50, y: 50 },
+        { x: 25, y: 75 },
+        { x: 75, y: 25 }
     ];
     
     positions.forEach((pos, index) => {
         setTimeout(() => {
             createFireworkAtPosition(pos.x, pos.y, 120, 25);
             
-            // Добавляем большую вспышку для мега-фейерверков
             const flash = document.createElement('div');
             flash.style.cssText = `
                 position: fixed;
@@ -264,19 +328,16 @@ function createMegaFireworks() {
         }, index * 500);
     });
     
-    // Мощные звуки
     soundManager.play('fireworks');
     setTimeout(() => soundManager.play('success'), 200);
     setTimeout(() => soundManager.play('fireworks'), 400);
     setTimeout(() => soundManager.play('success'), 600);
 }
 
-// Универсальная функция создания фейерверка в указанной позиции
 function createFireworkAtPosition(x, y, particleCount = 60, maxSize = 20) {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8c00', '#8a2be2'];
     const container = document.body;
     
-    // Создаем частицы
     for (let i = 0; i < particleCount; i++) {
         setTimeout(() => {
             const particle = document.createElement('div');
@@ -317,7 +378,6 @@ function createFireworkAtPosition(x, y, particleCount = 60, maxSize = 20) {
         }, i * 15);
     }
     
-    // Центральная вспышка
     setTimeout(() => {
         const flash = document.createElement('div');
         flash.style.cssText = `
@@ -353,16 +413,14 @@ function showScreen(screenId) {
     const activeScreen = document.getElementById(screenId);
     activeScreen.classList.add('active');
     
-    // Убираем все фейерверки при смене экрана
     document.querySelectorAll('.firework-particle, .firework-flash, .mega-firework, .wave').forEach(fw => fw.remove());
     
-    // Останавливаем музыку если уходим с экрана вопроса
     if (screenId !== 'question-screen' && screenId !== 'result-screen') {
-        soundManager.stopBackgroundMusic();
+        soundManager.stopAllMusic();
     }
     
-    if (screenId === 'topic-selection-screen') {
-        document.querySelectorAll('.topic-btn').forEach((btn, index) => {
+    if (screenId === 'semester-selection-screen') {
+        document.querySelectorAll('.semester-btn').forEach((btn, index) => {
             btn.style.animation = `bounceIn 0.6s ease-out ${index * 0.1}s both`;
         });
     }
