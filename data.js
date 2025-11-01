@@ -9,7 +9,7 @@ const appData = {
           name: "Тема 1: Натуральные числа и действия над ними",
           levels: {
             1: [
-              {question: "Сложите: 125 + 378", answer: "503", explanation: "125 + 378 = 382"},
+              {question: "Сложите: 183-2 + 378", answer: "503", explanation: "125 + 378 = 382"},
               {question: "Вычтите: 500 - 278", answer: "222", explanation: "500 - 278 = 222"},
               {question: "Умножьте: 25 × 4", answer: "100", explanation: "25 × 4 = 100"},
               {question: "Разделите: 144 ÷ 12", answer: "12", explanation: "144 ÷ 12 = 12"},
