@@ -99,6 +99,38 @@ function initApp() {
             console.warn('Не удалось добавить кнопку возврата к уровням:', err);
         }
     })();
+
+    // Добавляем кнопку "К уровням" на экран результата (после ответа)
+    (function addBackToLevelsButtonOnResult() {
+        try {
+            let backBtnRes = document.getElementById('back-to-levels-btn-result');
+            if (!backBtnRes) {
+                backBtnRes = document.createElement('button');
+                backBtnRes.id = 'back-to-levels-btn-result';
+                backBtnRes.className = 'back-btn';
+                backBtnRes.type = 'button';
+                backBtnRes.textContent = 'К уровням';
+
+                // Попробуем добавить в контейнер с кнопками на экране результата, иначе в сам экран
+                const controlsContainer = document.getElementById('result-controls') || document.getElementById('result-screen');
+                if (controlsContainer) {
+                    controlsContainer.appendChild(backBtnRes);
+                } else if (resultScreen) {
+                    resultScreen.appendChild(backBtnRes);
+                }
+
+                backBtnRes.addEventListener('click', () => {
+                    soundManager.play('click');
+                    soundManager.stopAllMusic();
+                    // Сбрасываем выбранный уровень, чтобы пользователь мог выбрать заново
+                    currentState.selectedLevel = null;
+                    showScreen('level-selection-screen');
+                });
+            }
+        } catch (err) {
+            console.warn('Не удалось добавить кнопку возврата к уровням на экран результата:', err);
+        }
+    })();
 }
 
 function handleCloseButton(currentScreenId) {
